@@ -1,37 +1,1171 @@
-name: Deploy Static Website to GitHub Pages
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyPark — จองที่จอดรถสนามบิน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0D1B2A;
+    --panel:#132A40;
+    --panel-2:#1B3A54;
+    --line:#2A4A66;
+    --sand:#EFEAE0;
+    --paper:#FAF7F1;
+    --line-light:#E2DACB;
+    --amber:#F2A93B;
+    --amber-dark:#C97F1B;
+    --green:#3FA65E;
+    --green-bg:#E7F5EC;
+    --grey:#7C8A96;
+    --ink:#13212D;
+    --ink-soft:#4C5A66;
+    --radius:6px;
+    --shadow:0 10px 30px rgba(13,27,42,0.12);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand,.btn,.nav-link,.board-label{font-family:'Space Grotesk',sans-serif;}
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  img{max-width:100%;display:block;}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
 
-# 1. กำหนด Trigger: ให้ทำงานเมื่อมีการ Push โค้ดลง Branch main
-on:
-  push:
-    branches:
-      - main
+  /* ---------- Nav ---------- */
+  .navbar{
+    position:sticky;top:0;z-index:50;
+    background:var(--navy);
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 32px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;color:var(--paper);font-weight:700;font-size:20px;letter-spacing:0.2px;}
+  .brand-mark{
+    width:30px;height:30px;border-radius:50%;
+    background:conic-gradient(from 210deg, var(--amber), var(--panel-2) 60%, var(--amber));
+    display:flex;align-items:center;justify-content:center;font-size:15px;
+  }
+  .nav-links{display:flex;gap:26px;list-style:none;margin:0;padding:0;}
+  .nav-link{
+    background:none;border:none;color:#C9D6E0;font-size:15px;font-weight:500;
+    padding:6px 2px;border-bottom:2px solid transparent;transition:color .15s, border-color .15s;
+  }
+  .nav-link:hover{color:#fff;}
+  .nav-link.active{color:#fff;border-bottom-color:var(--amber);}
+  .nav-right{display:flex;align-items:center;gap:14px;}
+  .btn{
+    border-radius:var(--radius);border:1px solid transparent;font-weight:600;font-size:14.5px;
+    padding:10px 18px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    transition:transform .12s ease, box-shadow .12s ease, background .15s, border-color .15s;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-amber{background:var(--amber);color:#1C1200;}
+  .btn-amber:hover{background:var(--amber-dark);}
+  .btn-outline-light{background:transparent;color:#fff;border-color:#4C6A84;}
+  .btn-outline-light:hover{border-color:#fff;}
+  .btn-navy{background:var(--navy);color:#fff;}
+  .btn-navy:hover{background:#0A1520;}
+  .btn-green{background:var(--green);color:#fff;}
+  .btn-green:hover{background:#328a4d;}
+  .btn-outline{background:transparent;border-color:var(--line-light);color:var(--ink);}
+  .btn-outline:hover{border-color:var(--ink-soft);}
+  .btn-danger-outline{background:transparent;border-color:#C0392B;color:#C0392B;}
+  .btn-danger-outline:hover{background:#C0392B;color:#fff;}
+  .btn-block{width:100%;}
+  .menu-toggle{display:none;background:none;border:none;color:#fff;font-size:22px;}
 
-# 2. กำหนดสิทธิ์ของระบบใน Repository
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+  /* ---------- Layout helpers ---------- */
+  .page{display:none;}
+  .page.is-active{display:block;animation:fadein .35s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @media (prefers-reduced-motion: reduce){
+    .page.is-active{animation:none;}
+    *{scroll-behavior:auto !important;}
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+  .section-pad{padding:64px 0;}
 
-# 3. กำหนดภาระงาน (Job)
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest # สั่งเปิด Cloud VM ระบบ Ubuntu
-    steps:
-      # ขั้นตอนที่ A: ดึงโค้ดล่าสุดจาก Repository มาลงเครื่อง VM
-      - name: Checkout Code
-        uses: actions/checkout@v4
+  /* ---------- Hero ---------- */
+  .hero{
+    background:
+      linear-gradient(180deg, rgba(13,27,42,0.72), rgba(13,27,42,0.55)),
+      repeating-linear-gradient(115deg, #16324A 0 2px, #10263A 2px 42px);
+    color:#fff;padding:76px 32px 96px;position:relative;overflow:hidden;
+  }
+  .hero::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:4px;
+    background:repeating-linear-gradient(90deg, var(--amber) 0 22px, transparent 22px 40px);
+    opacity:.8;
+  }
+  .hero-grid{
+    max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;
+  }
+  .runway-lights{display:flex;gap:8px;margin-bottom:18px;}
+  .runway-lights span{width:8px;height:8px;border-radius:50%;background:var(--amber);opacity:.35;animation:blink 2.4s infinite;}
+  .runway-lights span:nth-child(2){animation-delay:.3s;}
+  .runway-lights span:nth-child(3){animation-delay:.6s;}
+  .runway-lights span:nth-child(4){animation-delay:.9s;}
+  @keyframes blink{0%,100%{opacity:.25;}50%{opacity:1;}}
+  @media (prefers-reduced-motion: reduce){.runway-lights span{animation:none;opacity:.8;}}
+  .hero h1{font-size:44px;line-height:1.12;margin:0 0 16px;font-weight:700;}
+  .hero p.lead{color:#C9D6E0;font-size:17px;line-height:1.6;max-width:46ch;margin:0 0 8px;}
 
-      # ขั้นตอนที่ B: ตั้งค่าสภาพแวดล้อม GitHub Pages
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+  .board{
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:26px;box-shadow:var(--shadow);
+  }
+  .board-label{font-size:12px;letter-spacing:1.5px;color:var(--amber);margin:0 0 4px;text-transform:uppercase;}
+  .board-title{color:#fff;font-size:20px;margin:0 0 18px;font-weight:600;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;color:#AEC0CF;margin-bottom:6px;font-weight:500;}
+  .field select, .field input{
+    width:100%;padding:11px 12px;border-radius:5px;border:1px solid var(--line);
+    background:#0F2337;color:#fff;font-size:14.5px;font-family:'Inter',sans-serif;
+  }
+  .field select:focus, .field input:focus{outline:2px solid var(--amber);outline-offset:1px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
-      # ขั้นตอนที่ C: รวบรวมไฟล์สำหรับ Deploy
-      - name: Upload Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.' # เลือกไฟล์ทั้งหมดใน Root Directory
+  /* ---------- Cards / generic ---------- */
+  .card{background:#fff;border:1px solid var(--line-light);border-radius:var(--radius);}
+  .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;text-align:left;}
+  .why-item{padding:22px;border-left:3px solid var(--amber);}
+  .why-item h3{margin:0 0 6px;font-size:17px;}
+  .why-item p{margin:0;color:var(--ink-soft);font-size:14.5px;line-height:1.55;}
+  .section-title{font-size:28px;margin:0 0 30px;text-align:center;font-weight:700;}
 
-      # ขั้นตอนที่ D: นำไฟล์ไป Deploy ขึ้น Cloud Server
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+  /* ---------- Sign in / auth ---------- */
+  .auth-wrap{display:grid;grid-template-columns:1fr 1fr;min-height:640px;}
+  .auth-form-side{display:flex;align-items:center;justify-content:center;padding:48px;}
+  .auth-form{max-width:380px;width:100%;}
+  .auth-form h1{font-size:28px;margin:0 0 6px;}
+  .auth-form p.sub{color:var(--ink-soft);margin:0 0 28px;}
+  .auth-visual{
+    background:linear-gradient(150deg,#0D1B2A,#1B3A54 70%);
+    display:flex;align-items:center;justify-content:center;color:#fff;padding:40px;position:relative;
+  }
+  .auth-visual .tag{
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:6px;
+    padding:20px 24px;font-size:14.5px;max-width:280px;line-height:1.6;
+  }
+  .field-inline-check{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;margin-bottom:18px;}
+  .field-inline-check label{display:flex;align-items:center;gap:8px;color:var(--ink-soft);}
+  .helper-link{color:var(--amber-dark);text-decoration:none;font-weight:600;}
+  .form-note{font-size:14px;color:var(--ink-soft);text-align:center;margin-top:16px;}
+
+  /* ---------- About ---------- */
+  .about-hero{
+    background:linear-gradient(180deg, rgba(13,27,42,.65), rgba(13,27,42,.5)),
+      repeating-linear-gradient(115deg, #16324A 0 2px, #10263A 2px 42px);
+    color:#fff;padding:70px 32px;
+  }
+  .about-hero .wrap{display:grid;grid-template-columns:1fr;max-width:640px;}
+  .mission-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:start;padding:60px 0;}
+  .mission-grid h2{font-size:26px;margin:0 0 14px;}
+  .mission-grid p{color:var(--ink-soft);line-height:1.7;}
+  .team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;text-align:center;}
+  .avatar{
+    width:76px;height:76px;border-radius:50%;margin:0 auto 10px;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;
+  }
+  .team-grid h4{margin:0;font-size:14.5px;}
+  .team-grid p{margin:2px 0 0;font-size:12.5px;color:var(--ink-soft);}
+
+  /* ---------- Locations page ---------- */
+  .loc-header{
+    background:linear-gradient(180deg, rgba(13,27,42,.7), rgba(13,27,42,.55)),
+      repeating-linear-gradient(115deg, #16324A 0 2px, #10263A 2px 42px);
+    color:#fff;padding:40px 32px;
+  }
+  .loc-header h1{margin:0 0 14px;font-size:26px;}
+  .loc-select-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+  .loc-select-row select{padding:9px 12px;border-radius:5px;border:1px solid var(--line);background:#0F2337;color:#fff;}
+  .loc-body{display:grid;grid-template-columns:2fr 1fr;gap:22px;padding:32px;max-width:1180px;margin:0 auto;}
+  .level-tabs{display:flex;flex-direction:column;gap:8px;}
+  .level-tab{
+    border:1px solid var(--line-light);background:#fff;border-radius:5px;padding:10px 14px;
+    text-align:left;font-weight:600;font-size:14px;
+  }
+  .level-tab.active{border-color:var(--amber);background:#FFF6E7;}
+  .bay-panel{display:grid;grid-template-columns:1fr 90px;gap:16px;}
+  .bay-grid{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:6px;background:var(--paper);
+    border:1px solid var(--line-light);border-radius:6px;padding:14px;
+  }
+  .bay{aspect-ratio:1.4/1;border-radius:3px;font-size:9.5px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;}
+  .bay.free{background:var(--green);}
+  .bay.occ{background:var(--grey);}
+  .legend{display:flex;gap:18px;align-items:center;font-size:13px;color:var(--ink-soft);margin-top:12px;}
+  .legend .dot{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px;}
+  .side-panel{border:1px solid var(--line-light);border-radius:6px;padding:18px;height:fit-content;}
+  .side-panel h3{margin:0 0 4px;font-size:16px;}
+  .occ-meter{height:8px;border-radius:4px;background:var(--line-light);overflow:hidden;margin:10px 0 16px;}
+  .occ-meter-fill{height:100%;background:linear-gradient(90deg,var(--amber),#E2622B);}
+  .level-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-light);font-size:13.5px;}
+  .level-row:last-of-type{border-bottom:none;}
+  .free-badge{color:var(--green);font-weight:700;}
+  .updated-note{font-size:12px;color:var(--grey);margin-top:14px;}
+
+  /* ---------- Booking results ---------- */
+  .results-header{
+    background:linear-gradient(180deg, rgba(13,27,42,.65), rgba(13,27,42,.5)),
+      repeating-linear-gradient(115deg, #16324A 0 2px, #10263A 2px 42px);
+    color:#fff;padding:34px 32px;
+  }
+  .results-header .badge-dates{background:#fff;color:var(--ink);display:inline-block;border-radius:5px;padding:10px 16px;font-size:13px;margin-top:12px;}
+  .results-body{display:grid;grid-template-columns:260px 1fr;gap:26px;max-width:1180px;margin:0 auto;padding:32px;align-items:start;}
+  .filters{border:1px solid var(--line-light);border-radius:6px;padding:20px;position:sticky;top:80px;}
+  .filters h4{margin:18px 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);}
+  .filters h4:first-child{margin-top:0;}
+  .filters .range-row{display:flex;gap:8px;}
+  .filters .range-row input{width:100%;padding:8px;border:1px solid var(--line-light);border-radius:4px;font-size:13px;}
+  .chk{display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:8px;color:var(--ink-soft);}
+  .results-count{margin:0 0 16px;color:var(--ink-soft);font-size:14.5px;}
+  .zone-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
+  .zone-card{border:1px solid var(--line-light);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;}
+  .zone-photo{
+    height:100px;display:flex;align-items:center;justify-content:center;font-size:34px;color:#fff;
+  }
+  .zone-body{padding:16px;display:flex;flex-direction:column;gap:8px;flex:1;}
+  .zone-body h4{margin:0;font-size:15px;}
+  .zone-dist{font-size:12.5px;color:var(--ink-soft);}
+  .zone-price{font-size:19px;font-weight:700;margin-top:2px;}
+  .zone-price span{font-size:12px;font-weight:500;color:var(--ink-soft);}
+  .zone-feat{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px;}
+  .zone-feat span{font-size:11px;background:var(--sand);border-radius:3px;padding:3px 7px;color:var(--ink-soft);}
+  .zone-select-row{margin-top:auto;display:flex;justify-content:flex-end;}
+  .empty-note{color:var(--ink-soft);padding:40px 0;text-align:center;}
+
+  /* ---------- Contact ---------- */
+  .contact-header{
+    background:linear-gradient(180deg, rgba(13,27,42,.65), rgba(13,27,42,.5)),
+      repeating-linear-gradient(115deg, #16324A 0 2px, #10263A 2px 42px);
+    color:#fff;padding:56px 32px 90px;text-align:center;
+  }
+  .contact-grid{max-width:900px;margin:-56px auto 0;display:grid;grid-template-columns:1.3fr 1fr;gap:0;box-shadow:var(--shadow);border-radius:8px;overflow:hidden;}
+  .contact-form{background:#fff;padding:30px;}
+  .contact-info{background:var(--navy);color:#fff;padding:30px;}
+  .contact-info h3{margin:0 0 16px;}
+  .contact-info .row{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;font-size:14px;}
+  .contact-info .row .ic{font-size:16px;}
+  .map-embed{border-radius:6px;overflow:hidden;border:1px solid var(--line);margin-top:16px;}
+  .map-embed iframe{width:100%;height:150px;border:0;display:block;filter:grayscale(.2) contrast(1.05);}
+  .social-row{display:flex;gap:12px;margin-top:16px;}
+  .social-row a{width:34px;height:34px;border:1px solid rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;font-size:14px;}
+  .form-row{margin-bottom:14px;}
+  .form-row input, .form-row textarea{width:100%;padding:11px 12px;border:1px solid var(--line-light);border-radius:5px;font-family:inherit;font-size:14.5px;}
+  .form-row textarea{min-height:100px;resize:vertical;}
+  .form-success{background:var(--green-bg);color:#1E6B39;border-radius:5px;padding:12px 14px;font-size:13.5px;margin-top:10px;display:none;}
+  .form-success.show{display:block;}
+
+  /* ---------- FAQ ---------- */
+  .faq-wrap{max-width:760px;margin:0 auto;padding:56px 32px;}
+  .faq-search{width:100%;padding:13px 16px;border:1px solid var(--line-light);border-radius:6px;font-size:15px;margin-bottom:34px;}
+  .faq-cat{margin-bottom:6px;}
+  .faq-cat-head{
+    display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:2px solid var(--ink);
+    background:none;border-top:none;border-left:none;border-right:none;width:100%;text-align:left;font-size:18px;font-weight:700;
+  }
+  .faq-item{border-bottom:1px solid var(--line-light);}
+  .faq-q{
+    width:100%;text-align:left;background:none;border:none;padding:14px 4px;font-size:14.5px;font-weight:600;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease;font-size:14px;color:var(--ink-soft);line-height:1.6;padding:0 4px;}
+  .faq-item.open .faq-a{max-height:200px;padding-bottom:14px;}
+  .faq-item.hidden{display:none;}
+  .faq-help{text-align:center;margin-top:40px;}
+  .faq-help p{color:var(--ink-soft);margin-bottom:14px;}
+
+  /* ---------- Payment / success / cancel (shared "checkout" chrome) ---------- */
+  .checkout-header{
+    background:linear-gradient(180deg, rgba(13,27,42,.65), rgba(13,27,42,.5)),
+      repeating-linear-gradient(115deg, #16324A 0 2px, #10263A 2px 42px);
+    color:#fff;padding:34px 32px;
+  }
+  .checkout-body{display:grid;grid-template-columns:340px 1fr;gap:24px;max-width:1050px;margin:0 auto;padding:32px;align-items:start;}
+  .summary-card{border:1px solid var(--line-light);border-radius:6px;padding:22px;}
+  .summary-card h3{margin:0 0 16px;font-size:17px;}
+  .summary-row{margin-bottom:14px;}
+  .summary-row .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--grey);margin-bottom:3px;}
+  .summary-row .val{font-size:14.5px;font-weight:500;}
+  .summary-total{border-top:1px solid var(--line-light);margin-top:16px;padding-top:16px;display:flex;justify-content:space-between;align-items:baseline;}
+  .summary-total .amt{font-size:24px;font-weight:700;}
+  .steps{list-style:none;padding:0;margin:22px 0 0;border-left:2px solid var(--line-light);}
+  .steps li{padding:2px 0 16px 18px;position:relative;font-size:13.5px;color:var(--grey);}
+  .steps li::before{content:"";position:absolute;left:-6px;top:2px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--line-light);}
+  .steps li.done::before{background:var(--green);border-color:var(--green);}
+  .steps li.current{color:var(--ink);font-weight:700;}
+  .steps li.current::before{background:var(--amber);border-color:var(--amber);}
+
+  .pay-panel{border:1px solid var(--line-light);border-radius:6px;padding:22px;}
+  .pay-panel h3{margin:0 0 18px;font-size:17px;}
+  .pay-methods{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:16px;}
+  .pay-option{border:1px solid var(--line-light);border-radius:6px;padding:16px;}
+  .pay-option.selected{border-color:var(--amber);background:#FFFAF0;}
+  .pay-option-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px;margin-bottom:10px;}
+  .wallet-btn{width:100%;border:1px solid var(--line-light);border-radius:5px;padding:12px;margin-bottom:10px;font-weight:700;font-size:14px;background:#fff;}
+  .qr-row{display:flex;gap:16px;align-items:center;}
+  .qr-box{width:88px;height:88px;flex:none;background-image:
+     repeating-linear-gradient(0deg,#12212D 0 6px,transparent 6px 12px),
+     repeating-linear-gradient(90deg,#12212D 0 6px,transparent 6px 12px);
+     background-blend-mode:multiply;background-color:#fff;border:6px solid #fff;outline:1px solid var(--line-light);}
+  .secure-row{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:12.5px;color:var(--grey);}
+
+  /* ---------- Success / cancel centered notices ---------- */
+  .notice-page-header{
+    background:linear-gradient(180deg, rgba(13,27,42,.7), rgba(13,27,42,.55)),
+      repeating-linear-gradient(115deg, #16324A 0 2px, #10263A 2px 42px);
+    min-height:520px;display:flex;align-items:center;justify-content:center;padding:40px 20px;
+  }
+  .notice-card{background:#fff;border-radius:8px;box-shadow:var(--shadow);max-width:460px;width:100%;padding:34px;text-align:center;}
+  .notice-icon{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px;}
+  .notice-icon.ok{background:var(--green-bg);color:var(--green);}
+  .notice-icon.info{background:#FFF3E0;color:var(--amber-dark);}
+  .notice-card h2{margin:0 0 16px;font-size:22px;}
+  .notice-detail{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;background:var(--paper);border-radius:6px;padding:14px 16px;margin-bottom:18px;font-size:13px;}
+  .notice-detail .lbl{color:var(--grey);font-size:11px;text-transform:uppercase;}
+  .notice-list{text-align:left;font-size:13.5px;line-height:2;margin-bottom:18px;}
+  .notice-list .lbl{color:var(--grey);font-size:11.5px;text-transform:uppercase;display:block;}
+  .notice-actions{display:flex;gap:10px;}
+  .cancel-select{width:100%;padding:11px;border:1px solid var(--line-light);border-radius:5px;margin-bottom:16px;font-size:14px;}
+  .cancel-note{background:var(--paper);border-radius:6px;padding:14px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;text-align:left;}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--line-light);padding:30px 32px;}
+  .footer-row{max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+  .footer-links{display:flex;gap:20px;list-style:none;margin:0;padding:0;flex-wrap:wrap;}
+  .footer-links button{background:none;border:none;font-size:13.5px;color:var(--ink-soft);}
+  .footer-social{display:flex;gap:14px;}
+  .footer-social a{width:30px;height:30px;border-radius:50%;background:var(--sand);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:13px;}
+  .footer-copy{font-size:12.5px;color:var(--grey);}
+
+  @media (max-width: 880px){
+    .nav-links{display:none;}
+    .menu-toggle{display:block;}
+    .hero-grid, .mission-grid, .auth-wrap, .results-body, .loc-body, .checkout-body, .contact-grid{grid-template-columns:1fr;}
+    .zone-grid, .why-grid, .team-grid{grid-template-columns:1fr 1fr;}
+    .pay-methods{grid-template-columns:1fr;}
+    .filters{position:static;}
+  }
+  @media (max-width: 520px){
+    .zone-grid, .why-grid, .team-grid{grid-template-columns:1fr;}
+    .navbar{padding:12px 18px;}
+    .wrap, .loc-body, .results-body, .checkout-body{padding-left:18px;padding-right:18px;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <button class="brand" data-nav="home" style="background:none;border:none;padding:0;">
+    <span class="brand-mark" aria-hidden="true">✈</span> SkyPark
+  </button>
+  <ul class="nav-links" id="navLinks">
+    <li><button class="nav-link" data-nav="home">หน้าแรก</button></li>
+    <li><button class="nav-link" data-nav="locations">สถานที่</button></li>
+    <li><button class="nav-link" data-nav="booking">จองที่จอด</button></li>
+    <li><button class="nav-link" data-nav="faq">คำถามที่พบบ่อย</button></li>
+    <li><button class="nav-link" data-nav="about">เกี่ยวกับเรา</button></li>
+    <li><button class="nav-link" data-nav="contact">ติดต่อเรา</button></li>
+  </ul>
+  <div class="nav-right">
+    <button class="btn btn-outline-light" data-nav="signin">เข้าสู่ระบบ</button>
+  </div>
+</nav>
+
+<!-- ============ HOME ============ -->
+<section class="page" id="page-home">
+  <div class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="runway-lights"><span></span><span></span><span></span><span></span></div>
+        <h1>จองที่จอดรถสนามบิน<br>ไว้ล่วงหน้า เดินทางสบายใจ</h1>
+        <p class="lead">เทียบราคาที่จอดรถใกล้สนามบิน จองได้ในไม่กี่คลิก พร้อมรถรับส่งฟรีทุกจุดจอด</p>
+      </div>
+      <div class="board">
+        <p class="board-label">ค้นหาที่จอดรถ</p>
+        <h2 class="board-title">จองที่จอดของคุณ</h2>
+        <div class="field">
+          <label for="hAirport">สนามบิน</label>
+          <select id="hAirport">
+            <option value="LHR">Heathrow (LHR)</option>
+            <option value="LGW">Gatwick (LGW)</option>
+            <option value="MAN">Manchester (MAN)</option>
+            <option value="BKK">สุวรรณภูมิ (BKK)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="hArrDate">วันที่เดินทางไป</label>
+            <input type="date" id="hArrDate">
+          </div>
+          <div class="field">
+            <label for="hArrTime">เวลา</label>
+            <input type="time" id="hArrTime" value="10:00">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="hDepDate">วันที่เดินทางกลับ</label>
+            <input type="date" id="hDepDate">
+          </div>
+          <div class="field">
+            <label for="hDepTime">เวลา</label>
+            <input type="time" id="hDepTime" value="18:00">
+          </div>
+        </div>
+        <button class="btn btn-amber btn-block" id="findParkingBtn">ค้นหาที่จอดรถ →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap section-pad">
+    <h2 class="section-title">ทำไมต้องเลือก SkyPark</h2>
+    <div class="why-grid">
+      <div class="why-item">
+        <h3>จอดปลอดภัย</h3>
+        <p>มีกล้องวงจรปิดและเจ้าหน้าที่รักษาความปลอดภัยตลอด 24 ชั่วโมง ดูแลรถของคุณทุกช่วงเวลา</p>
+      </div>
+      <div class="why-item">
+        <h3>ราคาดีที่สุด</h3>
+        <p>เทียบราคาจากผู้ให้บริการหลายรายในที่เดียว พร้อมการันตีราคาดีที่สุดสำหรับทุกการจอง</p>
+      </div>
+      <div class="why-item">
+        <h3>จองง่าย จบในไม่กี่ขั้นตอน</h3>
+        <p>เลือกโซนที่จอด ชำระเงิน และรับ QR โค้ดเข้า-ออกทันที ไม่ต้องต่อคิวหน้าสนามบิน</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOCATIONS ============ -->
+<section class="page" id="page-locations">
+  <div class="loc-header">
+    <h1 id="locTitle">สถานะที่จอดรถแบบเรียลไทม์</h1>
+    <div class="loc-select-row">
+      <select id="locAirport">
+        <option value="LHR">Heathrow (LHR) — Terminal 2</option>
+        <option value="LGW">Gatwick (LGW) — South Terminal</option>
+        <option value="MAN">Manchester (MAN) — Terminal 1</option>
+        <option value="BKK">สุวรรณภูมิ (BKK) — อาคารผู้โดยสาร</option>
+      </select>
+    </div>
+  </div>
+  <div class="loc-body">
+    <div>
+      <div class="bay-panel">
+        <div>
+          <div class="bay-grid" id="bayGrid"></div>
+          <div class="legend">
+            <span><span class="dot" style="background:var(--green)"></span>ว่าง</span>
+            <span><span class="dot" style="background:var(--grey)"></span>เต็ม</span>
+          </div>
+        </div>
+        <div class="level-tabs" id="levelTabs"></div>
+      </div>
+    </div>
+    <div class="side-panel">
+      <h3>สถานะปัจจุบัน</h3>
+      <p style="margin:0;font-size:13px;color:var(--ink-soft);" id="occSummary">ระดับ P3 — ไม่ว่าง 72%</p>
+      <div class="occ-meter"><div class="occ-meter-fill" id="occMeterFill" style="width:72%"></div></div>
+      <div id="levelRows"></div>
+      <button class="btn btn-green btn-block" style="margin-top:16px;" id="reserveSpotBtn">จองที่จอดนี้ →</button>
+      <p class="updated-note">อัปเดตล่าสุด: 1 นาทีที่แล้ว</p>
+    </div>
+  </div>
+  <div class="wrap section-pad" style="padding-top:0;">
+    <h2 class="section-title">ทำไมต้องเลือก SkyPark</h2>
+    <div class="why-grid">
+      <div class="why-item"><h3>จอดปลอดภัย</h3><p>กล้องวงจรปิดและเจ้าหน้าที่ดูแลตลอด 24 ชั่วโมง</p></div>
+      <div class="why-item"><h3>ราคาดีที่สุด</h3><p>การันตีราคาดีที่สุดในทุกโซนจอดรถ</p></div>
+      <div class="why-item"><h3>จองง่าย</h3><p>เลือก จอง จ่าย จบในหน้าเดียว</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BOOKING RESULTS ============ -->
+<section class="page" id="page-booking">
+  <div class="results-header">
+    <h1 id="resultsTitle" style="margin:0;font-size:24px;">ที่จอดรถที่ว่างสำหรับ HEATHROW (LHR)</h1>
+    <div class="badge-dates" id="resultsDates">26 ต.ค. 2566 – 2 พ.ย. 2566</div>
+  </div>
+  <div class="results-body">
+    <aside class="filters">
+      <h4>ช่วงราคา (£ / วัน)</h4>
+      <div class="range-row">
+        <input type="number" id="fMin" placeholder="ต่ำสุด" min="0">
+        <input type="number" id="fMax" placeholder="สูงสุด" min="0">
+      </div>
+      <h4>ระยะห่างจากอาคาร</h4>
+      <label class="chk"><input type="checkbox" value="lt5" class="fDist"> เดินไม่ถึง 5 นาที</label>
+      <label class="chk"><input type="checkbox" value="5to10" class="fDist"> เดิน/รถรับส่ง 5-10 นาที</label>
+      <label class="chk"><input type="checkbox" value="10to15" class="fDist"> รถรับส่ง 10-15 นาที</label>
+      <label class="chk"><input type="checkbox" value="15plus" class="fDist"> รถรับส่ง 15 นาทีขึ้นไป</label>
+      <h4>ประเภทที่จอด</h4>
+      <label class="chk"><input type="checkbox" value="premium" class="fType"> พรีเมียมใกล้อาคาร</label>
+      <label class="chk"><input type="checkbox" value="short" class="fType"> จอดระยะสั้น</label>
+      <label class="chk"><input type="checkbox" value="economy" class="fType"> ประหยัด</label>
+      <label class="chk"><input type="checkbox" value="long" class="fType"> จอดระยะยาว</label>
+      <label class="chk"><input type="checkbox" value="valet" class="fType"> วาเลต</label>
+      <button class="btn btn-outline btn-block" id="applyFilters" style="margin-top:8px;">กรองผลลัพธ์</button>
+    </aside>
+    <div>
+      <p class="results-count" id="resultsCount">พบ 8 โซนที่จอดรถ</p>
+      <div class="zone-grid" id="zoneGrid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SIGN IN ============ -->
+<section class="page" id="page-signin">
+  <div class="auth-wrap">
+    <div class="auth-form-side">
+      <div class="auth-form">
+        <h1>เข้าสู่ระบบ</h1>
+        <p class="sub">ยินดีต้อนรับกลับมา</p>
+        <div class="form-row">
+          <label for="siEmail" style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">อีเมล</label>
+          <input type="email" id="siEmail" placeholder="your.name@example.com">
+        </div>
+        <div class="form-row">
+          <label for="siPass" style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">รหัสผ่าน</label>
+          <input type="password" id="siPass" placeholder="กรอกรหัสผ่าน">
+        </div>
+        <div class="field-inline-check">
+          <label><input type="checkbox"> จดจำฉันไว้</label>
+          <a href="#" class="helper-link" onclick="return false;">ลืมรหัสผ่าน?</a>
+        </div>
+        <button class="btn btn-navy btn-block" id="signInBtn">เข้าสู่ระบบ</button>
+        <p class="form-success" id="signInMsg">เข้าสู่ระบบสำเร็จ กำลังพาไปหน้าแรก…</p>
+        <p class="form-note">ยังไม่มีบัญชี? <a href="#" class="helper-link" onclick="return false;">สมัครสมาชิก</a></p>
+      </div>
+    </div>
+    <div class="auth-visual">
+      <div class="tag">"จองที่จอดล่วงหน้าไว้ก่อนเดินทาง หมดกังวลเรื่องที่จอดรถเต็มหน้าสนามบิน" — ทีม SkyPark</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="page" id="page-about">
+  <div class="about-hero">
+    <div class="wrap">
+      <p class="board-label" style="color:var(--amber);">เกี่ยวกับเรา</p>
+      <h1 style="font-size:32px;margin:0 0 14px;">ทีมงานเบื้องหลัง SkyPark</h1>
+      <p style="color:#C9D6E0;line-height:1.6;max-width:52ch;">การเดินทางของคุณเริ่มต้นที่นี่ เรามุ่งมั่นมอบประสบการณ์จอดรถสนามบินที่ปลอดภัยและไร้รอยต่อที่สุด</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="mission-grid">
+      <div>
+        <h2>พันธกิจของเรา</h2>
+        <p>เราตั้งใจสร้างระบบจองที่จอดรถที่ใช้งานง่ายที่สุด เพื่อให้ผู้เดินทางทุกคนมั่นใจได้ว่ามีที่จอดรถรออยู่แน่นอน ไม่ว่าจะเดินทางไปที่ไหน เมื่อไหร่ก็ตาม เราให้ความสำคัญกับความปลอดภัยของรถทุกคันและความสะดวกของลูกค้าเป็นอันดับแรก</p>
+      </div>
+      <div style="display:flex;gap:24px;justify-content:center;font-size:34px;">🛡️ 🔑</div>
+    </div>
+    <h2 class="section-title" style="text-align:left;">ทีมของเรา</h2>
+    <div class="team-grid" style="margin-bottom:60px;">
+      <div><div class="avatar" style="background:#C0663B;">MR</div><h4>Michael R.</h4><p>Operations Manager</p></div>
+      <div><div class="avatar" style="background:#3B7EC0;">AS</div><h4>Anya S.</h4><p>Customer Service Lead</p></div>
+      <div><div class="avatar" style="background:#4C8A5B;">DC</div><h4>David C.</h4><p>Security Supervisor</p></div>
+      <div><div class="avatar" style="background:#9B6BC0;">EK</div><h4>Elena K.</h4><p>Technology Director</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="page" id="page-contact">
+  <div class="contact-header">
+    <h1 style="margin:0;font-size:28px;">ติดต่อเรา</h1>
+  </div>
+  <div class="contact-grid">
+    <div class="contact-form">
+      <h3 style="margin:0 0 16px;">ส่งข้อความถึงเรา</h3>
+      <div class="form-row"><input type="text" placeholder="ชื่อ-นามสกุล"></div>
+      <div class="form-row"><input type="email" placeholder="อีเมล"></div>
+      <div class="form-row"><input type="text" placeholder="หัวข้อ"></div>
+      <div class="form-row"><textarea placeholder="ข้อความของคุณ"></textarea></div>
+      <button class="btn btn-navy btn-block" id="contactSendBtn">ส่งข้อความ →</button>
+      <p class="form-success" id="contactMsg">ขอบคุณสำหรับข้อความ ทีมงานจะติดต่อกลับโดยเร็วที่สุด</p>
+    </div>
+    <div class="contact-info">
+      <h3>ช่องทางติดต่อ</h3>
+      <div class="row"><span class="ic">📞</span> +44 20 7946 0123</div>
+      <div class="row"><span class="ic">✉️</span> support@skypark.com</div>
+      <div class="row"><span class="ic">📍</span> Terminal 5, Heathrow Airport, London, TW6 2GA</div>
+      <div class="map-embed">
+        <iframe title="แผนที่ Heathrow Terminal 5" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=-0.4980%2C51.4680%2C-0.4700%2C51.4780&layer=mapnik&marker=51.4723%2C-0.4880"></iframe>
+      </div>
+      <div class="social-row">
+        <a href="#" onclick="return false;" aria-label="Facebook">f</a>
+        <a href="#" onclick="return false;" aria-label="Instagram">ig</a>
+        <a href="#" onclick="return false;" aria-label="YouTube">▶</a>
+      </div>
+    </div>
+  </div>
+  <div style="height:60px;"></div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="page" id="page-faq">
+  <div class="faq-wrap">
+    <h1 class="section-title">คำถามที่พบบ่อย</h1>
+    <input type="search" class="faq-search" id="faqSearch" placeholder="ค้นหาคำตอบ...">
+    <div id="faqList"></div>
+    <div class="faq-help">
+      <p>ยังไม่พบคำตอบที่ต้องการ?</p>
+      <button class="btn btn-navy" data-nav="contact">ติดต่อเรา</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAYMENT ============ -->
+<section class="page" id="page-payment">
+  <div class="checkout-header"><h1 style="margin:0;font-size:24px;">ชำระเงิน</h1></div>
+  <div class="checkout-body">
+    <div class="summary-card" id="paySummary"></div>
+    <div class="pay-panel">
+      <h3>เลือกวิธีชำระเงิน</h3>
+      <div class="pay-methods">
+        <div class="pay-option selected" id="cardOption">
+          <div class="pay-option-head"><span>ตัวเลือกที่ 1: บัตรเครดิต/เดบิต</span><input type="radio" name="payMethod" checked></div>
+          <div class="form-row"><input type="text" placeholder="ชื่อบนบัตร"></div>
+          <div class="form-row"><input type="text" placeholder="หมายเลขบัตร" inputmode="numeric"></div>
+          <div class="field-row">
+            <input type="text" placeholder="MM/YY">
+            <input type="text" placeholder="CVV">
+          </div>
+          <p style="font-size:12px;color:var(--grey);margin:6px 0 0;">🔒 การชำระเงินปลอดภัยและเข้ารหัส</p>
+        </div>
+        <div>
+          <p style="font-size:12.5px;font-weight:700;color:var(--grey);margin:0 0 10px;text-transform:uppercase;">ตัวเลือกที่ 2: กระเป๋าเงินดิจิทัล</p>
+          <button class="wallet-btn">G Pay</button>
+          <button class="wallet-btn">Apple Pay</button>
+          <button class="wallet-btn">PayPal</button>
+        </div>
+      </div>
+      <div class="pay-option">
+        <p style="font-size:12.5px;font-weight:700;color:var(--grey);margin:0 0 10px;text-transform:uppercase;">ตัวเลือกที่ 3: สแกน QR ผ่านแอปธนาคาร</p>
+        <div class="qr-row">
+          <div class="qr-box" aria-hidden="true"></div>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0;">สแกนด้วยแอปธนาคารของคุณเพื่อชำระเงินทันที</p>
+        </div>
+      </div>
+      <div class="secure-row">
+        <span>🔒 SSL Secure</span>
+        <span>256-bit Encryption</span>
+      </div>
+      <button class="btn btn-green btn-block" id="payNowBtn" style="margin-top:18px;font-size:16px;padding:14px;"></button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUCCESS ============ -->
+<section class="page" id="page-success">
+  <div class="checkout-header"><h1 style="margin:0;font-size:24px;">การจองของคุณ</h1></div>
+  <div class="checkout-body">
+    <div class="summary-card" id="successSummarySide"></div>
+    <div class="pay-panel" style="text-align:center;">
+      <div class="notice-icon ok" style="margin:0 auto 14px;">✓</div>
+      <h3 style="margin:0 0 16px;">ชำระเงินสำเร็จ!</h3>
+      <div class="notice-list" id="successDetail" style="text-align:left;"></div>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:16px;">เราได้ส่งอีเมลยืนยันไปยังที่อยู่ที่ลงทะเบียนไว้แล้ว</p>
+      <div class="qr-row" style="justify-content:center;">
+        <div class="qr-box" aria-hidden="true"></div>
+        <p style="font-size:12.5px;color:var(--ink-soft);max-width:180px;text-align:left;">QR โค้ดเข้า-ออก ใช้สแกนที่ไม้กั้นทางเข้าและทางออก</p>
+      </div>
+      <div class="notice-actions" style="margin-top:20px;">
+        <button class="btn btn-outline btn-block" id="downloadReceiptBtn">ดาวน์โหลดใบเสร็จ</button>
+        <button class="btn btn-navy btn-block" data-nav="home">กลับหน้าแรก</button>
+      </div>
+      <p style="margin-top:16px;"><button class="btn-link" id="manageBookingLink" style="background:none;border:none;color:var(--amber-dark);font-weight:600;font-size:13.5px;">จัดการ / ยกเลิกการจองนี้</button></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MANAGE / CANCEL FORM ============ -->
+<section class="page" id="page-manage">
+  <div class="notice-page-header">
+    <div class="notice-card" style="max-width:520px;text-align:left;">
+      <h2 style="text-align:center;">ยกเลิกการจอง</h2>
+      <p style="font-weight:700;font-size:13.5px;margin:20px 0 8px;">สรุปการจองของคุณ</p>
+      <div class="notice-detail" id="manageDetail"></div>
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">เหตุผลในการยกเลิก</label>
+      <select class="cancel-select" id="cancelReason">
+        <option>เที่ยวบินถูกยกเลิก</option>
+        <option>เปลี่ยนแผนการเดินทาง</option>
+        <option>จองผิดวันที่</option>
+        <option>อื่นๆ</option>
+      </select>
+      <div class="cancel-note">
+        <strong>ข้อมูลการยกเลิกและนโยบายคืนเงิน</strong><br>
+        ยกเลิกฟรีหากแจ้งล่วงหน้าก่อนวันเข้าใช้บริการ 48 ชั่วโมง หากยกเลิกภายใน 48 ชั่วโมงอาจมีค่าธรรมเนียม £10 เงินคืนเต็มจำนวนจะถูกโอนกลับวิธีการชำระเงินเดิม
+      </div>
+      <div class="notice-actions">
+        <button class="btn btn-outline btn-block" data-nav="success">เก็บการจองนี้ไว้</button>
+        <button class="btn btn-danger-outline btn-block" id="confirmCancelBtn">ยืนยันการยกเลิก ✕</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CANCELLED ============ -->
+<section class="page" id="page-cancelled">
+  <div class="notice-page-header">
+    <div class="notice-card">
+      <div class="notice-icon info">ℹ</div>
+      <h2>ยกเลิกการจองเรียบร้อย</h2>
+      <div class="notice-detail" id="cancelledDetail"></div>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:20px;">ระบบดำเนินการคืนเงินให้แล้ว กรุณารอ 3-5 วันทำการเพื่อรับเงินคืนเข้าบัญชี</p>
+      <div class="notice-actions">
+        <button class="btn btn-navy btn-block" data-nav="home">กลับหน้าแรก</button>
+        <button class="btn btn-amber btn-block" data-nav="booking">ค้นหาที่จอดใหม่</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-row">
+    <ul class="footer-links">
+      <li><button data-nav="home">หน้าแรก</button></li>
+      <li><button data-nav="locations">สถานที่</button></li>
+      <li><button data-nav="booking">จองที่จอด</button></li>
+      <li><button data-nav="faq">คำถามที่พบบ่อย</button></li>
+      <li><button data-nav="about">เกี่ยวกับเรา</button></li>
+      <li><button data-nav="contact">ติดต่อเรา</button></li>
+    </ul>
+    <div class="footer-social">
+      <a href="#" onclick="return false;">f</a>
+      <a href="#" onclick="return false;">ig</a>
+      <a href="#" onclick="return false;">▶</a>
+    </div>
+  </div>
+  <p class="footer-copy" style="max-width:1180px;margin:14px auto 0;">© SkyPark Demo — ข้อมูลทั้งหมดในเว็บไซต์นี้เป็นข้อมูลจำลองเพื่อการสาธิตเท่านั้น</p>
+</footer>
+
+<script>
+/* =========================================================
+   DATA — everything below is fake / demo data only
+========================================================= */
+const AIRPORTS = {
+  LHR: { label: "Heathrow (LHR)", terminal: "Terminal 2, Short Term" },
+  LGW: { label: "Gatwick (LGW)", terminal: "South Terminal, Short Stay" },
+  MAN: { label: "Manchester (MAN)", terminal: "Terminal 1, Multi-Storey" },
+  BKK: { label: "สุวรรณภูมิ (BKK)", terminal: "อาคารผู้โดยสาร โซน B" }
+};
+
+const ZONES = {
+  LHR: [
+    {id:1,name:"Terminal 1 Premium Parking",dist:"เดิน 3 นาทีถึง T1",distKey:"lt5",type:"premium",price:23,feat:["24/7 Security","Covered"],icon:"🅿️",color:"#1B3A54"},
+    {id:2,name:"Economy Lot A",dist:"รถรับส่งฟรี 12 นาที",distKey:"15plus",type:"economy",price:10,feat:["Free Shuttle"],icon:"🚌",color:"#3B7EC0"},
+    {id:3,name:"Valet Parking (All Terminals)",dist:"ส่งตรงถึงอาคารผู้โดยสาร",distKey:"lt5",type:"valet",price:38,feat:["Meet & Greet","Key Drop"],icon:"🔑",color:"#12212D"},
+    {id:4,name:"Short Stay T4 & T5",dist:"เดิน 5 นาทีถึง T4/T5",distKey:"5to10",type:"short",price:21,feat:["Pre-Booked Space","Covered"],icon:"🅿️",color:"#4C6A84"},
+    {id:5,name:"Long Stay Off-Site (Partner)",dist:"รถรับส่ง 20 นาที",distKey:"15plus",type:"long",price:8,feat:["Best Value","Cost-effective"],icon:"🚐",color:"#3F7A55"},
+    {id:6,name:"T2 Business Parking",dist:"เดิน 6 นาทีถึง T2",distKey:"5to10",type:"premium",price:26,feat:["Corporate Access","CCTV"],icon:"💼",color:"#5B4C84"},
+    {id:7,name:"T2 Standard",dist:"เดิน 6 นาทีถึง T2",distKey:"5to10",type:"short",price:24,feat:["Best Value","Cost-effective"],icon:"🅿️",color:"#8A5B3C"},
+    {id:8,name:"T2 Business Parking Plus",dist:"เดิน 6 นาทีถึง T2",distKey:"5to10",type:"premium",price:26,feat:["Corporate Access"],icon:"🏢",color:"#2E5A6E"}
+  ],
+  LGW: [
+    {id:1,name:"South Terminal Premium",dist:"เดิน 4 นาที",distKey:"lt5",type:"premium",price:20,feat:["Covered","CCTV"],icon:"🅿️",color:"#1B3A54"},
+    {id:2,name:"Long Stay Economy",dist:"รถรับส่ง 15 นาที",distKey:"15plus",type:"long",price:9,feat:["Best Value"],icon:"🚐",color:"#3F7A55"},
+    {id:3,name:"North Terminal Valet",dist:"ส่งตรงถึงอาคาร",distKey:"lt5",type:"valet",price:34,feat:["Meet & Greet"],icon:"🔑",color:"#12212D"},
+    {id:4,name:"Short Stay Multi-Storey",dist:"เดิน 8 นาที",distKey:"5to10",type:"short",price:22,feat:["Covered"],icon:"🅿️",color:"#4C6A84"}
+  ],
+  MAN: [
+    {id:1,name:"Terminal 1 Premium",dist:"เดิน 5 นาที",distKey:"5to10",type:"premium",price:19,feat:["Covered","CCTV"],icon:"🅿️",color:"#1B3A54"},
+    {id:2,name:"JetParks Economy",dist:"รถรับส่ง 12 นาที",distKey:"15plus",type:"economy",price:7,feat:["Free Shuttle"],icon:"🚌",color:"#3B7EC0"},
+    {id:3,name:"Meet & Greet Valet",dist:"ส่งตรงถึงอาคาร",distKey:"lt5",type:"valet",price:30,feat:["Key Drop"],icon:"🔑",color:"#12212D"},
+    {id:4,name:"Long Stay Car Park",dist:"รถรับส่ง 18 นาที",distKey:"15plus",type:"long",price:8,feat:["Cost-effective"],icon:"🚐",color:"#3F7A55"}
+  ],
+  BKK: [
+    {id:1,name:"อาคารจอดรถ A พรีเมียม",dist:"เดิน 4 นาที",distKey:"lt5",type:"premium",price:15,feat:["มีหลังคา","กล้องวงจรปิด"],icon:"🅿️",color:"#1B3A54"},
+    {id:2,name:"ลานจอดประหยัด C",dist:"รถรับส่ง 15 นาที",distKey:"15plus",type:"economy",price:5,feat:["รถรับส่งฟรี"],icon:"🚌",color:"#3B7EC0"},
+    {id:3,name:"บริการวาเลต",dist:"ส่งตรงถึงอาคาร",distKey:"lt5",type:"valet",price:22,feat:["รับ-ส่งกุญแจ"],icon:"🔑",color:"#12212D"},
+    {id:4,name:"จอดระยะยาว โซน D",dist:"รถรับส่ง 20 นาที",distKey:"15plus",type:"long",price:4,feat:["คุ้มค่าที่สุด"],icon:"🚐",color:"#3F7A55"}
+  ]
+};
+
+const LEVELS = {
+  LHR:[{code:"P1",total:60,free:21},{code:"P2",total:80,free:45},{code:"P3",total:54,free:15},{code:"P4",total:40,free:12}],
+  LGW:[{code:"P1",total:50,free:18},{code:"P2",total:70,free:9},{code:"P3",total:45,free:30}],
+  MAN:[{code:"P1",total:65,free:40},{code:"P2",total:55,free:6},{code:"P3",total:38,free:22}],
+  BKK:[{code:"A",total:90,free:33},{code:"B",total:75,free:60},{code:"C",total:50,free:4}]
+};
+
+const FAQ_DATA = [
+  {cat:"การชำระเงิน", icon:"💳", items:[
+    {q:"รับชำระเงินวิธีใดบ้าง?", a:"เรารับชำระผ่านบัตรเครดิต/เดบิตหลัก, Apple Pay, Google Pay, PayPal และการสแกน QR ผ่านแอปธนาคารที่รองรับ"},
+    {q:"นโยบายการยกเลิกเป็นอย่างไร?", a:"ยกเลิกฟรีหากแจ้งล่วงหน้าก่อนวันเข้าใช้บริการ 48 ชั่วโมง หากยกเลิกภายใน 48 ชั่วโมงอาจมีค่าธรรมเนียม"}
+  ]},
+  {cat:"การยกเลิก", icon:"❌", items:[
+    {q:"ยกเลิกการจองได้อย่างไร?", a:"เข้าไปที่หน้ายืนยันการจองแล้วกดปุ่ม 'จัดการ / ยกเลิกการจองนี้' จากนั้นเลือกเหตุผลและยืนยันการยกเลิก"},
+    {q:"นโยบายการคืนเงินเป็นอย่างไร?", a:"เงินจะถูกคืนกลับไปยังวิธีการชำระเงินเดิมภายใน 3-5 วันทำการหลังยกเลิกสำเร็จ"}
+  ]},
+  {cat:"บริการรถรับส่ง", icon:"🚌", items:[
+    {q:"รถรับส่งวิ่งบ่อยแค่ไหน?", a:"รถรับส่งให้บริการทุกอาคารผู้โดยสารตลอด 24 ชั่วโมง ความถี่ทุก 10 นาที"},
+    {q:"จุดขึ้นรถรับส่งอยู่ตรงไหน?", a:"จุดขึ้นรถรับส่งอยู่บริเวณทางออกลานจอดรถของแต่ละโซน มีป้ายบอกทางชัดเจน"}
+  ]}
+];
+
+/* =========================================================
+   STATE
+========================================================= */
+let state = {
+  search: { airport:"LHR", arrDate:null, arrTime:"10:00", depDate:null, depTime:"18:00" },
+  results: [],
+  selectedLevel: {},
+  bayCache: {},
+  activeBooking: null,
+  lastBooking: null
+};
+
+function fmtDate(d){
+  return d.toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'numeric'});
+}
+function addDays(base, days){ const d = new Date(base); d.setDate(d.getDate()+days); return d; }
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+function showPage(page){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('is-active'));
+  const target = document.getElementById('page-'+page);
+  if(target) target.classList.add('is-active');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.nav === page));
+  window.scrollTo({top:0, behavior:'auto'});
+  if(location.hash !== '#'+page) history.replaceState(null,'', '#'+page);
+
+  if(page === 'locations') renderLocations();
+  if(page === 'booking') renderBookingResults();
+  if(page === 'faq') renderFaq();
+  if(page === 'payment') renderPayment();
+  if(page === 'success') renderSuccess();
+  if(page === 'manage') renderManage();
+  if(page === 'cancelled') renderCancelled();
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-nav]');
+  if(btn){ showPage(btn.dataset.nav); }
+});
+
+window.addEventListener('hashchange', () => {
+  const p = location.hash.replace('#','') || 'home';
+  showPage(p);
+});
+
+/* =========================================================
+   HOME → SEARCH
+========================================================= */
+(function initHomeDates(){
+  const today = new Date();
+  document.getElementById('hArrDate').value = today.toISOString().slice(0,10);
+  document.getElementById('hDepDate').value = addDays(today,7).toISOString().slice(0,10);
+})();
+
+document.getElementById('findParkingBtn').addEventListener('click', () => {
+  state.search.airport = document.getElementById('hAirport').value;
+  state.search.arrDate = document.getElementById('hArrDate').value;
+  state.search.arrTime = document.getElementById('hArrTime').value;
+  state.search.depDate = document.getElementById('hDepDate').value;
+  state.search.depTime = document.getElementById('hDepTime').value;
+  showPage('booking');
+});
+
+/* =========================================================
+   BOOKING RESULTS
+========================================================= */
+function renderBookingResults(){
+  const code = state.search.airport || 'LHR';
+  document.getElementById('resultsTitle').textContent = 'ที่จอดรถที่ว่างสำหรับ ' + AIRPORTS[code].label.toUpperCase();
+  const arr = state.search.arrDate ? new Date(state.search.arrDate) : new Date();
+  const dep = state.search.depDate ? new Date(state.search.depDate) : addDays(arr,7);
+  document.getElementById('resultsDates').textContent = fmtDate(arr) + ' – ' + fmtDate(dep);
+  state.results = ZONES[code] || [];
+  document.getElementById('fMin').value = '';
+  document.getElementById('fMax').value = '';
+  document.querySelectorAll('.fDist, .fType').forEach(c => c.checked = false);
+  paintZones(state.results);
+}
+
+function paintZones(list){
+  const grid = document.getElementById('zoneGrid');
+  document.getElementById('resultsCount').textContent = 'พบ ' + list.length + ' โซนที่จอดรถ';
+  if(list.length === 0){
+    grid.innerHTML = '<p class="empty-note">ไม่พบโซนที่จอดรถตามเงื่อนไขที่เลือก ลองปรับตัวกรองใหม่</p>';
+    return;
+  }
+  grid.innerHTML = list.map(z => `
+    <div class="zone-card">
+      <div class="zone-photo" style="background:${z.color}">${z.icon}</div>
+      <div class="zone-body">
+        <h4>${z.name}</h4>
+        <div class="zone-dist">📍 ${z.dist}</div>
+        <div class="zone-price">£${z.price.toFixed(2)} <span>/ วัน</span></div>
+        <div class="zone-feat">${z.feat.map(f=>`<span>${f}</span>`).join('')}</div>
+        <div class="zone-select-row">
+          <button class="btn btn-navy" data-select-zone="${z.id}">เลือก</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('zoneGrid').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-select-zone]');
+  if(!btn) return;
+  const zone = state.results.find(z => z.id == btn.dataset.selectZone);
+  startBooking(zone, 'zone');
+});
+
+document.getElementById('applyFilters').addEventListener('click', () => {
+  const min = parseFloat(document.getElementById('fMin').value);
+  const max = parseFloat(document.getElementById('fMax').value);
+  const dists = Array.from(document.querySelectorAll('.fDist:checked')).map(c=>c.value);
+  const types = Array.from(document.querySelectorAll('.fType:checked')).map(c=>c.value);
+  let list = state.results.slice();
+  if(!isNaN(min)) list = list.filter(z => z.price >= min);
+  if(!isNaN(max)) list = list.filter(z => z.price <= max);
+  if(dists.length) list = list.filter(z => dists.includes(z.distKey));
+  if(types.length) list = list.filter(z => types.includes(z.type));
+  paintZones(list);
+});
+
+/* =========================================================
+   LOCATIONS
+========================================================= */
+document.getElementById('locAirport').addEventListener('change', renderLocations);
+
+function seededRandom(seed){
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getBayGrid(code, level){
+  const key = code+'-'+level.code;
+  if(state.bayCache[key]) return state.bayCache[key];
+  const total = 30;
+  const occRate = 1 - (level.free/level.total);
+  const cells = [];
+  for(let i=0;i<total;i++){
+    cells.push(seededRandom(i*7 + level.code.charCodeAt(0) + code.length) < occRate ? 'occ' : 'free');
+  }
+  state.bayCache[key] = cells;
+  return cells;
+}
+
+function renderLocations(){
+  const code = document.getElementById('locAirport').value;
+  document.getElementById('locTitle').textContent = 'สถานะที่จอดรถแบบเรียลไทม์ — ' + AIRPORTS[code].terminal;
+  const levels = LEVELS[code];
+  if(!state.selectedLevel[code]) state.selectedLevel[code] = levels[0].code;
+  const activeCode = state.selectedLevel[code];
+  const active = levels.find(l => l.code === activeCode) || levels[0];
+
+  document.getElementById('levelTabs').innerHTML = levels.map(l => `
+    <button class="level-tab ${l.code===active.code?'active':''}" data-level="${l.code}">${l.code}<br><span style="font-weight:400;font-size:12px;color:var(--ink-soft)">${l.free} ว่าง</span></button>
+  `).join('');
+
+  document.querySelectorAll('#levelTabs .level-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.selectedLevel[code] = btn.dataset.level;
+      renderLocations();
+    });
+  });
+
+  const cells = getBayGrid(code, active);
+  document.getElementById('bayGrid').innerHTML = cells.map((c,i) => `<div class="bay ${c}">${(i+1).toString().padStart(2,'0')}</div>`).join('');
+
+  const occPct = Math.round((1 - active.free/active.total)*100);
+  document.getElementById('occSummary').textContent = 'ระดับ ' + active.code + ' — ไม่ว่าง ' + occPct + '%';
+  document.getElementById('occMeterFill').style.width = occPct + '%';
+
+  document.getElementById('levelRows').innerHTML = levels.map(l => `
+    <div class="level-row"><span>${l.code}</span><span class="free-badge">✓ ${l.free} ว่าง</span></div>
+  `).join('');
+
+  document.getElementById('reserveSpotBtn').onclick = () => {
+    const spotNum = active.code + '-' + (Math.floor(seededRandom(active.total+active.code.length)*90)+10);
+    const zone = {
+      id:'loc-'+active.code, name: AIRPORTS[code].terminal + ' — Level ' + active.code,
+      price: ZONES[code][0].price, spot: spotNum
+    };
+    startBooking(zone, 'location', code);
+  };
+}
+
+/* =========================================================
+   BOOKING FLOW → PAYMENT / SUCCESS / MANAGE / CANCELLED
+========================================================= */
+function startBooking(zone, source, airportCode){
+  const code = airportCode || state.search.airport || 'LHR';
+  const arr = state.search.arrDate ? new Date(state.search.arrDate) : new Date();
+  const dep = state.search.depDate ? new Date(state.search.depDate) : addDays(arr,3);
+  const spot = zone.spot || ('3A-' + (Math.floor(Math.random()*90)+100));
+  state.activeBooking = {
+    airport: AIRPORTS[code].label,
+    zoneName: zone.name,
+    terminalLine: AIRPORTS[code].terminal,
+    spot: spot,
+    arr, dep,
+    arrTime: state.search.arrTime || '12:00',
+    depTime: state.search.depTime || '12:00',
+    price: zone.price || 15,
+    total: (zone.price || 15) * Math.max(1, Math.round((dep-arr)/86400000)),
+    id: null
+  };
+  showPage('payment');
+}
+
+function summaryBlockHTML(b, options){
+  options = options || {};
+  return `
+    <h3>สรุปการจอง</h3>
+    <div class="summary-row"><div class="lbl">วันที่</div><div class="val">${fmtDate(b.arr)} – ${fmtDate(b.dep)}<br>${b.arrTime} – ${b.depTime}</div></div>
+    <div class="summary-row"><div class="lbl">โซนที่จอด</div><div class="val">${b.zoneName}</div></div>
+    <div class="summary-row"><div class="lbl">หมายเลขช่องจอด</div><div class="val">Spot ${b.spot}</div></div>
+    <div class="summary-row"><div class="lbl">บริการ</div><div class="val">รถรับส่งสนามบิน: รวมในราคาแล้ว (ฟรี)</div></div>
+    ${options.steps ? `<ul class="steps">${options.steps}</ul>` : `<div class="summary-total"><span>ยอดรวม</span><span class="amt">£${b.total.toFixed(2)}</span></div>`}
+  `;
+}
+
+function renderPayment(){
+  const b = state.activeBooking;
+  if(!b) return;
+  document.getElementById('paySummary').innerHTML = summaryBlockHTML(b, {steps:`
+    <li class="current">Review</li>
+    <li class="current">Payment</li>
+    <li>Confirmation</li>
+  `}) + `<div class="summary-total"><span>ยอดรวม</span><span class="amt">£${b.total.toFixed(2)}</span></div>`;
+  document.getElementById('payNowBtn').textContent = 'ชำระเงินตอนนี้ · £' + b.total.toFixed(2);
+}
+
+document.getElementById('payNowBtn').addEventListener('click', () => {
+  const b = state.activeBooking;
+  if(!b) return;
+  b.id = 'SPK-' + new Date().getFullYear() + '-' + Math.floor(1000+Math.random()*9000);
+  state.lastBooking = b;
+  showPage('success');
+});
+
+function renderSuccess(){
+  const b = state.lastBooking;
+  if(!b) return;
+  document.getElementById('successSummarySide').innerHTML = summaryBlockHTML(b, {steps:`
+    <li class="done">Review</li>
+    <li class="done">Payment</li>
+    <li class="current">Confirmation</li>
+  `});
+  document.getElementById('successDetail').innerHTML = `
+    <span class="lbl">Booking ID</span> ${b.id}<br>
+    <span class="lbl">วันที่</span> ${fmtDate(b.arr)} – ${fmtDate(b.dep)}<br>
+    <span class="lbl">โซน</span> ${b.zoneName} · Spot ${b.spot}<br>
+    <span class="lbl">ชำระด้วย</span> บัตรเครดิต · <strong>£${b.total.toFixed(2)}</strong>
+  `;
+}
+
+document.getElementById('manageBookingLink').addEventListener('click', () => showPage('manage'));
+
+document.getElementById('downloadReceiptBtn').addEventListener('click', () => {
+  const b = state.lastBooking;
+  if(!b) return;
+  const text = `SkyPark — ใบเสร็จรับเงิน\n\nBooking ID: ${b.id}\nสนามบิน: ${b.airport}\nโซน: ${b.zoneName}\nช่องจอด: ${b.spot}\nวันที่: ${fmtDate(b.arr)} - ${fmtDate(b.dep)}\nเวลา: ${b.arrTime} - ${b.depTime}\nยอดชำระ: £${b.total.toFixed(2)}\n\nขอบคุณที่ใช้บริการ SkyPark`;
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'skypark-receipt-' + b.id + '.txt';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+
+function renderManage(){
+  const b = state.lastBooking;
+  if(!b) return;
+  document.getElementById('manageDetail').innerHTML = `
+    <div><span class="lbl">Reservation ID</span>${b.id}</div>
+    <div><span class="lbl">Location</span>${b.airport}</div>
+    <div><span class="lbl">Arrival</span>${fmtDate(b.arr)} @ ${b.arrTime}</div>
+    <div><span class="lbl">Departure</span>${fmtDate(b.dep)} @ ${b.depTime}</div>
+  `;
+}
+
+document.getElementById('confirmCancelBtn').addEventListener('click', () => {
+  showPage('cancelled');
+});
+
+function renderCancelled(){
+  const b = state.lastBooking;
+  if(!b) return;
+  document.getElementById('cancelledDetail').innerHTML = `
+    <div><span class="lbl">Booking ID</span>${b.id}</div>
+    <div><span class="lbl">Location</span>${b.airport}</div>
+    <div><span class="lbl">Cancelled on</span>${fmtDate(new Date())}</div>
+    <div><span class="lbl">Reason</span>${document.getElementById('cancelReason').value}</div>
+  `;
+}
+
+/* =========================================================
+   SIGN IN
+========================================================= */
+document.getElementById('signInBtn').addEventListener('click', () => {
+  document.getElementById('signInMsg').classList.add('show');
+  setTimeout(() => showPage('home'), 900);
+});
+
+/* =========================================================
+   CONTACT FORM
+========================================================= */
+document.getElementById('contactSendBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('contactMsg').classList.add('show');
+});
+
+/* =========================================================
+   FAQ
+========================================================= */
+function renderFaq(filterText){
+  const q = (filterText||'').trim().toLowerCase();
+  const list = document.getElementById('faqList');
+  list.innerHTML = FAQ_DATA.map((cat, ci) => {
+    const items = cat.items.filter(it => !q || it.q.toLowerCase().includes(q) || it.a.toLowerCase().includes(q));
+    if(q && items.length === 0) return '';
+    return `
+      <div class="faq-cat">
+        <button class="faq-cat-head">${cat.icon} ${cat.cat}</button>
+        ${cat.items.map((it, ii) => `
+          <div class="faq-item ${items.includes(it) ? '' : 'hidden'}" data-cat="${ci}" data-i="${ii}">
+            <button class="faq-q">${it.q}<span aria-hidden="true">＋</span></button>
+            <div class="faq-a">${it.a}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.faq-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.faq-item').classList.toggle('open');
+    });
+  });
+}
+document.getElementById('faqSearch').addEventListener('input', (e) => renderFaq(e.target.value));
+
+/* =========================================================
+   INIT
+========================================================= */
+const initialPage = location.hash.replace('#','') || 'home';
+showPage(initialPage);
+</script>
+</body>
+</html>
